@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Brinquedos API</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>Gerenciador de Brinquedos</h1>
+
+  <h2>Cadastrar Brinquedo</h2>
+  <input type="text" id="nome" placeholder="Nome"><br>
+  <input type="text" id="descricao" placeholder="Descrição"><br>
+  <input type="number" id="preco" placeholder="Preço"><br>
+  <button onclick="cadastrarBrinquedo()">Cadastrar</button>
+
+  <h2>Lista de Brinquedos</h2>
+  <button onclick="listarBrinquedos()">Atualizar Lista</button>
+  <ul id="listaBrinquedos"></ul>
+
+  <script>
+    const API_URL = 'http://localhost:8080/index.php/brinquedos';
+
+    function listarBrinquedos() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          const lista = document.getElementById('listaBrinquedos');
+          lista.innerHTML = '';
+
+          if (Array.isArray(data)) {
+            data.forEach(b => {
+              const li = document.createElement('li');
+              li.innerHTML = `<strong>${b.nome}</strong> - R$${b.preco.toFixed(2)} 
+                              <button onclick="deletarBrinquedo(${b.id})">Excluir</button>`;
+              lista.appendChild(li);
+            });
+          } else {
+            lista.innerHTML = `<li>${data.message || data.error}</li>`;
+          }
+        });
+    }
+
+    function cadastrarBrinquedo() {
+      const nome = document.getElementById('nome').value;
+      const descricao = document.getElementById('descricao').value;
+      const preco = parseFloat(document.getElementById('preco').value);
+
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, descricao, preco })
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message || data.error);
+          listarBrinquedos();
+        });
+    }
+
+    function deletarBrinquedo(id) {
+      if (!confirm('Tem certeza que deseja excluir este brinquedo?')) return;
+
+      fetch(API_URL, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message || data.error);
+          listarBrinquedos();
+        });
+    }
+
+    // Listar inicialmente
+    listarBrinquedos();
+  </script>
+</body>
+</html>
